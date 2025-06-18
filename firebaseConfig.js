@@ -4,14 +4,16 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: 'SUA_API_KEY',
-  authDomain: 'SEU_AUTH_DOMAIN',
-  projectId: 'SEU_PROJECT_ID',
-  storageBucket: 'SEU_STORAGE_BUCKET',
-  messagingSenderId: 'SEU_MSG_SENDER_ID',
-  appId: 'SEU_APP_ID',
+  apiKey: "AIzaSyB9jhsKbeulwaOi5hgF14MM71qHcinmsxc",
+  authDomain: "tonavez-ccf1f.firebaseapp.com",
+  projectId: "tonavez-ccf1f",
+  storageBucket: "tonavez-ccf1f.firebasestorage.app",
+  messagingSenderId: "80735813290",
+  appId: "1:80735813290:web:776aa6af7c68375e4e5ad3"
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+export { auth, db };

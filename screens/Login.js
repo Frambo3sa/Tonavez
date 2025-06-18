@@ -1,26 +1,72 @@
-// screens/Login.js
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text } from 'react-native';
-import { auth } from '../firebaseConfig';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 
-export default ({ navigation }) => {
+export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [err, setErr] = useState('');
 
-  const doLogin = () => {
+  const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
-      .catch(e => setErr(e.message));
+      .then(() => {
+        // ✅ Login bem-sucedido → navegar para a tela principal
+        navigation.navigate('Home');
+      })
+      .catch(error => {
+        Alert.alert('Erro', 'Email ou senha inválidos!');
+      });
   };
 
   return (
-    <View style={{padding:20}}>
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} />
-      <TextInput placeholder="Senha" secureTextEntry value={password} onChangeText={setPassword} />
-      {err ? <Text style={{color:'red'}}>{err}</Text> : null}
-      <Button title="Login" onPress={doLogin}/>
-      <Button title="Criar conta" onPress={() => navigation.navigate('Register')}/>
+    <View style={styles.container}>
+      <Text style={styles.title}>Login no Tonavez</Text>
+
+      <TextInput
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        style={styles.input}
+      />
+
+      <TextInput
+        placeholder="Senha"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        style={styles.input}
+      />
+
+      <Button title="Entrar" onPress={handleLogin} />
+
+      <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
+        Não tem conta? Cadastre-se
+      </Text>
     </View>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5
+  },
+  link: {
+    color: 'blue',
+    marginTop: 15,
+    textAlign: 'center'
+  }
+});

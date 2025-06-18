@@ -1,54 +1,102 @@
-// screens/Games.js
 import React, { useState } from 'react';
-import { View, Text, FlatList, Button, Modal, TextInput } from 'react-native';
-import { db } from '../firebaseConfig';
-import { addDoc, collection } from 'firebase/firestore';
+import { View, Text, Button, FlatList, StyleSheet, Alert, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { doc, updateDoc, collection, addDoc } from 'firebase/firestore'; // ✅ Incluído addDoc
+import { auth, db } from '../firebaseConfig';
+import { useNavigation } from '@react-navigation/native';
 
-const gamesList = [
-  { id: '1', name: 'Dominó' },
-  { id: '2', name: 'Xadrez' },
-  { id: '3', name: 'Uno' },
+const jogos = [
+  { id: '1', nome: 'Futebol de Mesa' },
+  { id: '2', nome: 'Tênis de Mesa' },
+  { id: '3', nome: 'Xadrez' }
 ];
 
-export default ({ navigation, user }) => {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selGame, setSelGame] = useState(null);
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+export default function Games() {
+  const [selectedJogo, setSelectedJogo] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const navigation = useNavigation();
 
-  const openModal = game => {
-    setSelGame(game);
-    setModalVisible(true);
+  const reservarJogo = async () => {
+    if (!selectedJogo) {
+      Alert.alert('Selecione um jogo primeiro!');
+      return;
+    }
+
+    try {
+      const reservaData = {
+        userId: auth.currentUser.uid, // ✅ Identificador do usuário
+        jogo: selectedJogo.nome,
+        data: date.toLocaleDateString(),
+        horario: date.toLocaleTimeString()
+      };
+
+      // ✅ Atualiza a reserva no documento do usuário (coleção "users")
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        reserva: reservaData
+      });
+
+      // ✅ Salva a mesma reserva em uma nova entrada da coleção "reservas"
+      await addDoc(collection(db, 'reservas'), reservaData);
+
+      Alert.alert('Sucesso', 'Jogo reservado com sucesso!');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível reservar o jogo.');
+      console.error(error);
+    }
   };
 
-  const reservar = async () => {
-    await addDoc(collection(db, 'reservas'), {
-      userId: user.uid, gameId: selGame.id, gameName: selGame.name, date, time, status: 'ativo'
-    });
-    setModalVisible(false);
+  const onChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShowPicker(Platform.OS === 'ios');
+    setDate(currentDate);
   };
 
   return (
-    <View style={{flex:1}}>
+    <View style={styles.container}>
+      <Text style={styles.title}>Escolha um jogo para reservar:</Text>
+
       <FlatList
-        data={gamesList}
-        keyExtractor={i => i.id}
-        renderItem={({item})=> (
-          <View style={{padding:10,borderBottomWidth:1}}>
-            <Text>{item.name}</Text>
-            <Button title="Reservar" onPress={()=>openModal(item)}/>
-          </View>
+        data={jogos}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <Button
+            title={item.nome}
+            onPress={() => setSelectedJogo(item)}
+            color={selectedJogo?.id === item.id ? 'green' : 'blue'}
+          />
         )}
       />
-      <Modal visible={modalVisible} animationType="slide">
-        <View style={{padding:20}}>
-          <Text>Reserva: {selGame?.name}</Text>
-          <TextInput placeholder="YYYY-MM-DD" value={date} onChangeText={setDate}/>
-          <TextInput placeholder="HH:MM" value={time} onChangeText={setTime}/>
-          <Button title="Confirmar" onPress={reservar}/>
-          <Button title="Cancelar" onPress={()=>setModalVisible(false)}/>
+
+      {selectedJogo && (
+        <View style={styles.reservaSection}>
+          <Text>Selecionado: {selectedJogo.nome}</Text>
+          <Button title="Escolher Data e Hora" onPress={() => setShowPicker(true)} />
+          {showPicker && (
+            <DateTimePicker
+              value={date}
+              mode="datetime"
+              is24Hour={true}
+              display="default"
+              onChange={onChange}
+            />
+          )}
+          <Button title="Reservar Jogo" onPress={reservarJogo} color="purple" />
         </View>
-      </Modal>
+      )}
+
+      <View style={styles.footer}>
+        <Button title="Home" onPress={() => navigation.navigate('Home')} />
+        <Button title="Agenda" onPress={() => navigation.navigate('Agenda')} />
+        <Button title="Se Liga Só" onPress={() => navigation.navigate('Videos')} />
+      </View>
     </View>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20 },
+  title: { fontSize: 20, marginBottom: 20, textAlign: 'center' },
+  reservaSection: { marginTop: 20, alignItems: 'center' },
+  footer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 30 }
+});
