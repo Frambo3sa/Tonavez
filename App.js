@@ -29,7 +29,7 @@ export default function App() {
         <Stack.Screen 
           name="Home" 
           component={Home} 
-          options={{ headerShown: false }} 
+          options={{ title: 'Home' }} 
         />
         <Stack.Screen 
           name="Profile" 

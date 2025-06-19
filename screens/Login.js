@@ -10,7 +10,7 @@ export default function Login({ navigation }) {
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        // ✅ Login bem-sucedido → navegar para a tela principal
+        
         navigation.navigate('Home');
       })
       .catch(error => {
