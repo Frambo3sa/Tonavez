@@ -16,8 +16,6 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-
-        {/* Login e Cadastro */}
         <Stack.Screen 
           name="Login" 
           component={Login} 
@@ -28,8 +26,6 @@ export default function App() {
           component={Register} 
           options={{ title: 'Criar Conta' }} 
         />
-
-        {/* Telas Principais */}
         <Stack.Screen 
           name="Home" 
           component={Home} 
@@ -55,7 +51,6 @@ export default function App() {
           component={Videos} 
           options={{ title: 'Se Liga Só - Tutoriais' }} 
         />
-
       </Stack.Navigator>
     </NavigationContainer>
   );

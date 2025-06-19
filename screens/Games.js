@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Button, FlatList, StyleSheet, Alert, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { doc, updateDoc, collection, addDoc } from 'firebase/firestore'; // ✅ Incluído addDoc
+import ReactDatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { doc, setDoc, collection, addDoc } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 
@@ -25,18 +27,16 @@ export default function Games() {
 
     try {
       const reservaData = {
-        userId: auth.currentUser.uid, // ✅ Identificador do usuário
+        userId: auth.currentUser.uid,
         jogo: selectedJogo.nome,
         data: date.toLocaleDateString(),
         horario: date.toLocaleTimeString()
       };
 
-      // ✅ Atualiza a reserva no documento do usuário (coleção "users")
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
         reserva: reservaData
-      });
+      }, { merge: true });
 
-      // ✅ Salva a mesma reserva em uma nova entrada da coleção "reservas"
       await addDoc(collection(db, 'reservas'), reservaData);
 
       Alert.alert('Sucesso', 'Jogo reservado com sucesso!');
@@ -73,13 +73,22 @@ export default function Games() {
           <Text>Selecionado: {selectedJogo.nome}</Text>
           <Button title="Escolher Data e Hora" onPress={() => setShowPicker(true)} />
           {showPicker && (
-            <DateTimePicker
-              value={date}
-              mode="datetime"
-              is24Hour={true}
-              display="default"
-              onChange={onChange}
-            />
+            Platform.OS === 'web' ? (
+              <ReactDatePicker
+                selected={date}
+                onChange={(date) => setDate(date)}
+                showTimeSelect
+                dateFormat="Pp"
+              />
+            ) : (
+              <DateTimePicker
+                value={date}
+                mode="datetime"
+                is24Hour={true}
+                display="default"
+                onChange={onChange}
+              />
+            )
           )}
           <Button title="Reservar Jogo" onPress={reservarJogo} color="purple" />
         </View>

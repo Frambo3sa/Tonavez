@@ -2,6 +2,11 @@
   "expo": {
     "name": "tonavez",
     "slug": "tonavez",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "ad2514aa-c5c6-423f-940d-5321a69dd694"
+      }
+    }
   }
 }

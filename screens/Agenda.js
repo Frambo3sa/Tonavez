@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { collection, getDocs } from 'firebase/firestore'; // 🔁 ALTERADO: buscar reservas
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { Button } from 'react-native-elements';
@@ -10,7 +10,7 @@ export default function Agenda() {
   const [markedDates, setMarkedDates] = useState({});
   const [selectedDate, setSelectedDate] = useState('');
   const [reservasDoDia, setReservasDoDia] = useState([]);
-  const [todasReservas, setTodasReservas] = useState({}); // ✅ NOVO: guardar todas reservas organizadas
+  const [todasReservas, setTodasReservas] = useState({});
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function Agenda() {
 
   const carregarReservas = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'reservas')); // ✅ NOVO: acessando a coleção 'reservas'
+      const querySnapshot = await getDocs(collection(db, 'reservas'));
       const marks = {};
       const reservas = {};
 
@@ -27,10 +27,8 @@ export default function Agenda() {
         const { data: dataReserva, jogo, horario, userId } = docSnap.data();
         const dateFormatted = formatarData(dataReserva);
 
-        // ✅ NOVO: marca a data no calendário
         marks[dateFormatted] = { marked: true, dotColor: 'blue' };
 
-        // ✅ NOVO: adiciona reserva na lista da data
         if (!reservas[dateFormatted]) {
           reservas[dateFormatted] = [];
         }
@@ -43,38 +41,26 @@ export default function Agenda() {
       });
 
       setMarkedDates(marks);
-      setTodasReservas(reservas); // ✅ NOVO
+      setTodasReservas(reservas);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar as reservas.');
     }
   };
 
   const formatarData = (dataString) => {
-    // 🔁 Função mantida: Transforma "DD/MM/YYYY" em "YYYY-MM-DD"
     const [dia, mes, ano] = dataString.split('/');
     return `${ano}-${mes}-${dia}`;
   };
 
   const handleDayPress = (day) => {
     setSelectedDate(day.dateString);
-
-    // ✅ NOVO: atualiza as reservas do dia selecionado
-    if (todasReservas[day.dateString]) {
-      setReservasDoDia(todasReservas[day.dateString]);
-    } else {
-      setReservasDoDia([]);
-    }
+    setReservasDoDia(todasReservas[day.dateString] || []);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Agenda de Reservas</Text>
-      
-      <Calendar
-        markedDates={markedDates}
-        onDayPress={handleDayPress}
-      />
-
+      <Calendar markedDates={markedDates} onDayPress={handleDayPress} />
       <Text style={styles.subtitle}>Reservas do dia:</Text>
 
       {selectedDate && reservasDoDia.length > 0 ? (

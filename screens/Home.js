@@ -1,73 +1,58 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, Alert, ActivityIndicator } from 'react-native';
-import { auth, db } from '../firebaseConfig';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Button, Alert } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 
 export default function Home() {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [reserva, setReserva] = useState(null);
   const navigation = useNavigation();
 
-  const fetchUserData = async () => {
-    try {
-      const docRef = doc(db, 'users', auth.currentUser.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        setUserData(docSnap.data());
-      } else {
-        Alert.alert('Erro', 'Dados do usuário não encontrados.');
-      }
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os dados.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchUserData();
-  }, []);
+    const fetchReserva = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setReserva(data.reserva);
+        } else {
+          setReserva(null);
+        }
+      } catch (error) {
+        Alert.alert('Erro', 'Não foi possível carregar a reserva.');
+        console.error(error);
+      }
+    };
 
-  const handleEditProfile = () => {
-    navigation.navigate('Profile');
-  };
+    fetchReserva();
+  }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Olá, {auth.currentUser.email}!</Text>
-      <Button title="Editar Perfil" onPress={handleEditProfile} />
+      <Text style={styles.header}>Olá, {auth.currentUser.email}!</Text>
+      <Button title="Perfil" onPress={() => navigation.navigate('Profile')} />
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Reserva Atual:</Text>
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : userData?.reserva ? (
-          <View>
-            <Text>Jogo: {userData.reserva.jogo}</Text>
-            <Text>Data: {userData.reserva.data}</Text>
-            <Text>Horário: {userData.reserva.horario}</Text>
-            <Button title="Registrar Devolução" onPress={() => Alert.alert('Devolução registrada!')} />
-          </View>
+        {reserva ? (
+          <>
+            <Text>Jogo reservado: {reserva.jogo}</Text>
+            <Text>Data: {reserva.data}</Text>
+            <Text>Hora: {reserva.horario}</Text>
+          </>
         ) : (
-          <Text>Nenhuma reserva no momento.</Text>
+          <Text>Nenhum jogo reservado.</Text>
         )}
       </View>
 
-      <View style={styles.buttons}>
-        <Button title="Jogos" onPress={() => navigation.navigate('Games')} />
-        <Button title="Se Liga Só" onPress={() => navigation.navigate('Videos')} />
-        <Button title="Agenda" onPress={() => navigation.navigate('Agenda')} />
-      </View>
+      <Button title="Jogos" onPress={() => navigation.navigate('Games')} />
+      <Button title="Agenda" onPress={() => navigation.navigate('Agenda')} />
+      <Button title="Se Liga Só" onPress={() => navigation.navigate('Videos')} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 20, marginBottom: 20, textAlign: 'center' },
-  card: { borderWidth: 1, padding: 15, borderRadius: 10, backgroundColor: '#f9f9f9', marginBottom: 20 },
-  cardTitle: { fontWeight: 'bold', marginBottom: 10 },
-  buttons: { flexDirection: 'row', justifyContent: 'space-around' }
+  container: { flex: 1, padding: 20, alignItems: 'center' },
+  header: { fontSize: 22, marginBottom: 20 },
+  card: { padding: 20, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginVertical: 20, width: '100%' }
 });
