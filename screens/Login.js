@@ -1,46 +1,58 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert} from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [senha, setSenha] = useState('');
 
-  const handleLogin = () => {
-    signInWithEmailAndPassword(auth, email, password)
+  const fazerLogin = () => {
+    signInWithEmailAndPassword(auth, email, senha)
       .then(() => {
-        
+       
         navigation.navigate('Home');
       })
-      .catch(error => {
+      .catch(() => {
         Alert.alert('Erro', 'Email ou senha inválidos!');
       });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login no Tonavez</Text>
+      <Image
+        source={require('../imagens/logoTNV.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
 
+      <Text style={styles.titulo}>Login</Text>
+
+      <Text style={styles.label}>EMAIL</Text>
       <TextInput
-        placeholder="Email"
+        placeholder="Digite seu email"
+        placeholderTextColor="#bbb"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
+        style={styles.campo}
       />
 
+      <Text style={styles.label}>SENHA</Text>
       <TextInput
-        placeholder="Senha"
-        value={password}
-        onChangeText={setPassword}
+        placeholder="Digite sua senha"
+        placeholderTextColor="#bbb"
+        value={senha}
+        onChangeText={setSenha}
         secureTextEntry
-        style={styles.input}
+        style={styles.campo}
       />
 
-      <Button title="Entrar" onPress={handleLogin} />
+      <TouchableOpacity style={styles.botao} onPress={fazerLogin}>
+        <Text style={styles.textoBotao}>Log in</Text>
+      </TouchableOpacity>
 
       <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
-        Não tem conta? Cadastre-se
+        Não possui uma conta?
       </Text>
     </View>
   );
@@ -49,24 +61,53 @@ export default function Login({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#074c84', 
+    alignItems: 'center',
     justifyContent: 'center',
-    padding: 20
+    padding: 30
   },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    textAlign: 'center'
+  logo: {
+    width: 200,
+    height: 100,
+    marginBottom: 30
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5
+  titulo: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 25
+  },
+  label: {
+    alignSelf: 'flex-start',
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#D3D3D3',
+    marginTop: 10
+  },
+  campo: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    color: '#000',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8
+  },
+  botao: {
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    width: '100%',
+    marginTop: 20,
+    alignItems: 'center'
+  },
+  textoBotao: {
+    color: '#083B70',
+    fontWeight: 'bold'
   },
   link: {
-    color: 'blue',
-    marginTop: 15,
-    textAlign: 'center'
+    marginTop: 20,
+    color: '#D3D3D3',
+    textDecorationLine: 'underline'
   }
 });

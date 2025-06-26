@@ -52,7 +52,25 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, alignItems: 'center' },
-  header: { fontSize: 22, marginBottom: 20 },
-  card: { padding: 20, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginVertical: 20, width: '100%' }
+  container: {
+    flex: 1,
+    backgroundColor: '#083B70',
+    padding: 20,
+    alignItems: 'center'
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    alignSelf: 'flex-start',
+    marginTop: 40,
+    marginBottom: 10
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 25,
+    padding: 20,
+    width: '100%',
+    marginVertical: 20
+  }
 });

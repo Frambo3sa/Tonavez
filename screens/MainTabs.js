@@ -5,7 +5,7 @@ import Home from './Home';
 import Games from './Games';
 import Agenda from './Agenda';
 import Videos from './Videos';
-import Profile from './Profile'; // Importante!
+import Profile from './Profile'; 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import {View, Text, TextInput,TouchableOpacity,StyleSheet,Alert} from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
 import { setDoc, doc } from 'firebase/firestore';
 
-export default function Register({ navigation }) {
+export default function Cadastro({ navigation }) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [senha, setSenha] = useState('');
 
-  const handleRegister = async () => {
+  const cadastrarUsuario = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
-      // Criando documento do usuário no Firestore
-      await setDoc(doc(db, 'users', user.uid), {
+      await setDoc(doc(db, 'usuarios', user.uid), {
         email: email,
-        reserva: null, // Nenhuma reserva inicial
+        reserva: null
       });
 
       Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!');
@@ -27,32 +26,79 @@ export default function Register({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Cadastrar no Tonavez</Text>
+    <View style={estilos.container}>
+      <Text style={estilos.titulo}>Crie sua conta</Text>
+
+      <Text style={estilos.label}>EMAIL</Text>
       <TextInput
-        placeholder="Email"
+        placeholder="Digite seu email"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
+        style={estilos.campo}
       />
+
+      <Text style={estilos.label}>SENHA</Text>
       <TextInput
-        placeholder="Senha"
-        value={password}
-        onChangeText={setPassword}
+        placeholder="Digite sua senha"
+        value={senha}
+        onChangeText={setSenha}
         secureTextEntry
-        style={styles.input}
+        style={estilos.campo}
       />
-      <Button title="Cadastrar" onPress={handleRegister} />
-      <Text style={styles.link} onPress={() => navigation.navigate('Login')}>
+
+      <TouchableOpacity style={estilos.botao} onPress={cadastrarUsuario}>
+        <Text style={estilos.textoBotao}>Sign up</Text>
+      </TouchableOpacity>
+
+      <Text style={estilos.link} onPress={() => navigation.navigate('Login')}>
         Já tem conta? Faça login
       </Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
-  title: { fontSize: 24, marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 10, borderRadius: 5 },
-  link: { color: 'blue', marginTop: 15, textAlign: 'center' }
+const estilos = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    padding: 30
+  },
+  titulo: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#083B70',
+    textAlign: 'center',
+    marginBottom: 30
+  },
+  label: {
+    alignSelf: 'flex-start',
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#999',
+    marginTop: 10
+  },
+  campo: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10
+  },
+  botao: {
+    backgroundColor: '#083B70',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20
+  },
+  textoBotao: {
+    color: '#fff',
+    fontWeight: 'bold'
+  },
+  link: {
+    color: '#777',
+    marginTop: 20,
+    textAlign: 'center',
+    textDecorationLine: 'underline'
+  }
 });
