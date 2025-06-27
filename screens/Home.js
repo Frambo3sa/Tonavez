@@ -1,52 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, Alert } from 'react-native';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebaseConfig';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { doc, getDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../firebaseConfig';
 
-export default function Home() {
+export default function Inicio() {
   const [reserva, setReserva] = useState(null);
-  const navigation = useNavigation();
+  const navegacao = useNavigation();
 
   useEffect(() => {
-    const fetchReserva = async () => {
+    const buscarReserva = async () => {
       try {
         const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
-          const data = userDoc.data();
-          setReserva(data.reserva);
+          const dados = userDoc.data();
+          setReserva(dados.reserva);
         } else {
           setReserva(null);
         }
-      } catch (error) {
-        Alert.alert('Erro', 'Não foi possível carregar a reserva.');
-        console.error(error);
+      } catch (erro) {
+        console.error('Erro ao buscar reserva:', erro);
       }
     };
 
-    fetchReserva();
+    buscarReserva();
   }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Olá, {auth.currentUser.email}!</Text>
-      <Button title="Perfil" onPress={() => navigation.navigate('Profile')} />
-
-      <View style={styles.card}>
-        {reserva ? (
-          <>
-            <Text>Jogo reservado: {reserva.jogo}</Text>
-            <Text>Data: {reserva.data}</Text>
-            <Text>Hora: {reserva.horario}</Text>
-          </>
-        ) : (
-          <Text>Nenhum jogo reservado.</Text>
-        )}
+      <View style={styles.saudacao}>
+        <Text style={styles.titulo}>Olá {auth.currentUser.displayName || 'Usuário'}!</Text>
+        <Text style={styles.subtitulo}>você já está na vez?</Text>
       </View>
 
-      <Button title="Jogos" onPress={() => navigation.navigate('Games')} />
-      <Button title="Agenda" onPress={() => navigation.navigate('Agenda')} />
-      <Button title="Se Liga Só" onPress={() => navigation.navigate('Videos')} />
+      <View style={styles.cartaoReserva}>
+        <Text style={styles.textoReserva}>
+          {reserva ? `Jogo reservado: ${reserva.jogo}` : 'Ainda sem jogos reservado!'}
+        </Text>
+      </View>
+
+      <View style={styles.botoesContainer}>
+        <TouchableOpacity style={styles.botao} onPress={() => navegacao.navigate('Games')}>
+          <Ionicons name="dice" size={32} color="#fff" />
+          <Text style={styles.textoBotao}>Jogos</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.botao} onPress={() => navegacao.navigate('Agenda')}>
+          <Ionicons name="calendar" size={32} color="#fff" />
+          <Text style={styles.textoBotao}>Agenda</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.botao} onPress={() => navegacao.navigate('Videos')}>
+          <Ionicons name="bulb" size={32} color="#fff" />
+          <Text style={styles.textoBotao}>Se liga só!</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.rodape}>
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Games')}>
+          <Ionicons name="dice" size={24} color="#fff" />
+          <Text style={styles.textoRodape}>Jogos</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Agenda')}>
+          <Ionicons name="calendar" size={24} color="#fff" />
+          <Text style={styles.textoRodape}>Agenda</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Profile')}>
+          <Ionicons name="person" size={24} color="#fff" />
+          <Text style={styles.textoRodape}>Perfil</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -55,22 +81,81 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#083B70',
-    padding: 20,
-    alignItems: 'center'
+    paddingTop: 50,
+    paddingBottom: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  header: {
-    fontSize: 24,
+  saudacao: {
+    alignSelf: 'flex-start',
+    marginLeft: 20,
+    marginBottom: 10,
+  },
+  titulo: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
-    alignSelf: 'flex-start',
-    marginTop: 40,
-    marginBottom: 10
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 25,
+  subtitulo: {
+    fontSize: 16,
+    color: '#fff',
+    marginTop: 4,
+  },
+  cartaoReserva: {
+    backgroundColor: '#F7C53C',
+    borderRadius: 16,
     padding: 20,
+    marginBottom: 40,
+    width: '85%',
+  },
+  textoReserva: {
+    fontSize: 18,
+    color: '#083B70',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  botoesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  botao: {
+    backgroundColor: '#083B70',
+    borderWidth: 2,
+    borderColor: '#fff',
+    borderRadius: 20,
+    padding: 15,
+    margin: 10,
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textoBotao: {
+    color: '#fff',
+    marginTop: 8,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  rodape: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#052C52',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    position: 'absolute',
+    bottom: 0,
     width: '100%',
-    marginVertical: 20
-  }
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  itemRodape: {
+    alignItems: 'center',
+  },
+  textoRodape: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
 });

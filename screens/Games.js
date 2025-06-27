@@ -1,43 +1,63 @@
-import React, { useState } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, Alert, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useNavigation } from '@react-navigation/native';
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
+import { useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { doc, setDoc, collection, addDoc } from 'firebase/firestore';
+import {
+  Alert,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { auth, db } from '../firebaseConfig';
-import { useNavigation } from '@react-navigation/native';
 
 const jogos = [
-  { id: '1', nome: 'Futebol de Mesa' },
-  { id: '2', nome: 'Tênis de Mesa' },
-  { id: '3', nome: 'Xadrez' }
+  {
+    id: '1',
+    nome: 'Futebol de Mesa',
+    imagem: require('../imagens/futebol.png'),
+  },
+  {
+    id: '2',
+    nome: 'Tênis de Mesa',
+    imagem: require('../imagens/tenis.png'),
+  },
+  {
+    id: '3',
+    nome: 'Xadrez',
+    imagem: require('../imagens/xadrez.png'),
+  },
+  
 ];
 
 export default function Games() {
-  const [selectedJogo, setSelectedJogo] = useState(null);
-  const [showPicker, setShowPicker] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const navigation = useNavigation();
+  const [jogoSelecionado, setJogoSelecionado] = useState(null);
+  const [mostrarPicker, setMostrarPicker] = useState(false);
+  const [data, setData] = useState(new Date());
+  const navegacao = useNavigation();
 
   const reservarJogo = async () => {
-    if (!selectedJogo) {
+    if (!jogoSelecionado) {
       Alert.alert('Selecione um jogo primeiro!');
       return;
     }
 
     try {
-      const reservaData = {
+      const reserva = {
         userId: auth.currentUser.uid,
-        jogo: selectedJogo.nome,
-        data: date.toLocaleDateString(),
-        horario: date.toLocaleTimeString()
+        jogo: jogoSelecionado.nome,
+        data: data.toLocaleDateString(),
+        horario: data.toLocaleTimeString()
       };
 
-      await setDoc(doc(db, 'users', auth.currentUser.uid), {
-        reserva: reservaData
-      }, { merge: true });
-
-      await addDoc(collection(db, 'reservas'), reservaData);
+      await setDoc(doc(db, 'users', auth.currentUser.uid), { reserva }, { merge: true });
+      await addDoc(collection(db, 'reservas'), reserva);
 
       Alert.alert('Sucesso', 'Jogo reservado com sucesso!');
     } catch (error) {
@@ -47,65 +67,197 @@ export default function Games() {
   };
 
   const onChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShowPicker(Platform.OS === 'ios');
-    setDate(currentDate);
+    const currentDate = selectedDate || data;
+    setMostrarPicker(Platform.OS === 'ios');
+    setData(currentDate);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Escolha um jogo para reservar:</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.textoSelecao}>Escolha um jogo para reservar:</Text>
 
-      <FlatList
-        data={jogos}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Button
-            title={item.nome}
-            onPress={() => setSelectedJogo(item)}
-            color={selectedJogo?.id === item.id ? 'green' : 'blue'}
-          />
+        {jogos.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[
+              styles.cardJogo,
+              jogoSelecionado?.id === item.id && styles.cardSelecionado
+            ]}
+            onPress={() => setJogoSelecionado(item)}
+          >
+            <View style={styles.areaImagem}>
+              {item.imagem ? (
+                <Image source={item.imagem} style={styles.imagemJogo} />
+              ) : (
+                <View style={styles.imagemPlaceholder}>
+                  <Text style={styles.placeholderTexto}>Imagem aqui</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.nomeJogo}>{item.nome}</Text>
+          </TouchableOpacity>
+        ))}
+
+        {jogoSelecionado && (
+          <View style={styles.secaoReserva}>
+            <Text style={styles.detalhe}>Selecionado: {jogoSelecionado.nome}</Text>
+
+            <TouchableOpacity style={styles.botaoData} onPress={() => setMostrarPicker(true)}>
+              <Text style={styles.textoBotaoData}>Escolher Data e Hora</Text>
+            </TouchableOpacity>
+
+            {mostrarPicker && (
+              Platform.OS === 'web' ? (
+                <ReactDatePicker
+                  selected={data}
+                  onChange={(date) => setData(date)}
+                  showTimeSelect
+                  dateFormat="Pp"
+                />
+              ) : (
+                <DateTimePicker
+                  value={data}
+                  mode="datetime"
+                  is24Hour={true}
+                  display="default"
+                  onChange={onChange}
+                />
+              )
+            )}
+
+            <TouchableOpacity style={styles.botaoReservar} onPress={reservarJogo}>
+              <Text style={styles.textoBotaoReservar}>Reservar Jogo</Text>
+            </TouchableOpacity>
+          </View>
         )}
-      />
 
-      {selectedJogo && (
-        <View style={styles.reservaSection}>
-          <Text>Selecionado: {selectedJogo.nome}</Text>
-          <Button title="Escolher Data e Hora" onPress={() => setShowPicker(true)} />
-          {showPicker && (
-            Platform.OS === 'web' ? (
-              <ReactDatePicker
-                selected={date}
-                onChange={(date) => setDate(date)}
-                showTimeSelect
-                dateFormat="Pp"
-              />
-            ) : (
-              <DateTimePicker
-                value={date}
-                mode="datetime"
-                is24Hour={true}
-                display="default"
-                onChange={onChange}
-              />
-            )
-          )}
-          <Button title="Reservar Jogo" onPress={reservarJogo} color="purple" />
-        </View>
-      )}
+        <View style={{ height: 100 }} /> 
+      </ScrollView>
 
-      <View style={styles.footer}>
-        <Button title="Home" onPress={() => navigation.navigate('Home')} />
-        <Button title="Agenda" onPress={() => navigation.navigate('Agenda')} />
-        <Button title="Se Liga Só" onPress={() => navigation.navigate('Videos')} />
+      <View style={styles.rodape}>
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Home')}>
+          <Ionicons name="home" size={24} color="#F7C53C" />
+          <Text style={styles.textoRodape}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Games')}>
+          <Ionicons name="dice" size={24} color="#fff" />
+          <Text style={styles.textoRodape}>Jogos</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Agenda')}>
+          <Ionicons name="calendar" size={24} color="#fff" />
+          <Text style={styles.textoRodape}>Agenda</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Profile')}>
+          <Ionicons name="person" size={24} color="#fff" />
+          <Text style={styles.textoRodape}>Perfil</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 20, marginBottom: 20, textAlign: 'center' },
-  reservaSection: { marginTop: 20, alignItems: 'center' },
-  footer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 30 }
+  container: { flex: 1, backgroundColor: '#083B70' },
+  scrollContent: { padding: 20, paddingBottom: 120 },
+  textoSelecao: {
+    color: '#fff',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  cardJogo: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginVertical: 8,
+    alignItems: 'center',
+  },
+  cardSelecionado: {
+    borderColor: 'green',
+    borderWidth: 2,
+  },
+  nomeJogo: {
+    fontSize: 18,
+    color: '#083B70',
+    fontWeight: '600',
+    marginTop: 10,
+  },
+  areaImagem: {
+    width: '100%',
+    height: 120,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagemJogo: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  imagemPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#ccc',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderTexto: {
+    color: '#666',
+    fontSize: 14,
+  },
+  secaoReserva: {
+    marginTop: 20,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  detalhe: {
+    color: '#fff',
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  botaoData: {
+    backgroundColor: '#F7C53C',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  textoBotaoData: {
+    fontWeight: 'bold',
+    color: '#083B70',
+  },
+  botaoReservar: {
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  textoBotaoReservar: {
+    color: '#083B70',
+    fontWeight: 'bold',
+  },
+  rodape: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#052C52',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  itemRodape: {
+    alignItems: 'center',
+  },
+  textoRodape: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
 });
