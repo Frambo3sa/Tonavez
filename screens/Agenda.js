@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, ScrollView } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
@@ -24,7 +24,7 @@ export default function Agenda() {
       const reservas = {};
 
       querySnapshot.forEach((docSnap) => {
-        const { data: dataReserva, jogo, horario, userId } = docSnap.data();
+        const { data: dataReserva, jogo, horario } = docSnap.data();
         const dateFormatted = formatarData(dataReserva);
 
         marks[dateFormatted] = { marked: true, dotColor: 'blue' };
@@ -33,11 +33,7 @@ export default function Agenda() {
           reservas[dateFormatted] = [];
         }
 
-        reservas[dateFormatted].push({
-          usuario: userId,
-          jogo,
-          horario
-        });
+        reservas[dateFormatted].push({ jogo, horario });
       });
 
       setMarkedDates(marks);
@@ -58,31 +54,33 @@ export default function Agenda() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Agenda de Reservas</Text>
-      <Calendar markedDates={markedDates} onDayPress={handleDayPress} />
-      <Text style={styles.subtitle}>Reservas do dia:</Text>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Agenda de Reservas</Text>
+        <Calendar markedDates={markedDates} onDayPress={handleDayPress} />
+        <Text style={styles.subtitle}>Reservas do dia:</Text>
 
-      {selectedDate && reservasDoDia.length > 0 ? (
-        <FlatList
-          data={reservasDoDia}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <Text style={styles.reservaItem}>
-              Usuário: {item.usuario} - Jogo: {item.jogo} - Horário: {item.horario}
-            </Text>
-          )}
-        />
-      ) : (
-        <Text style={styles.noReserva}>Nenhuma reserva para este dia.</Text>
-      )}
+        {selectedDate && reservasDoDia.length > 0 ? (
+          <FlatList
+            data={reservasDoDia}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <Text style={styles.reservaItem}>
+                Jogo: {item.jogo} - Horário: {item.horario}
+              </Text>
+            )}
+          />
+        ) : (
+          <Text style={styles.noReserva}>Nenhuma reserva para este dia.</Text>
+        )}
 
-      <View style={styles.footer}>
-        <Button title="Home" onPress={() => navigation.navigate('Home')} />
-        <Button title="Jogos" onPress={() => navigation.navigate('Games')} />
-        <Button title="Se Liga Só" onPress={() => navigation.navigate('Videos')} />
+        <View style={styles.footer}>
+          <Button title="Home" onPress={() => navigation.navigate('Home')} />
+          <Button title="Jogos" onPress={() => navigation.navigate('Games')} />
+          <Button title="Se Liga Só" onPress={() => navigation.navigate('Videos')} />
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -92,5 +90,5 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 16, marginTop: 10, fontWeight: 'bold' },
   reservaItem: { marginTop: 5, padding: 6, borderBottomWidth: 1, borderColor: '#ddd' },
   noReserva: { marginTop: 10, textAlign: 'center', color: 'gray' },
-  footer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }
+  footer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
 });

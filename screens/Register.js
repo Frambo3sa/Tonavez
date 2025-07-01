@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {View, Text, TextInput,TouchableOpacity,StyleSheet,Alert} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
 import { setDoc, doc } from 'firebase/firestore';
@@ -7,17 +7,19 @@ import { setDoc, doc } from 'firebase/firestore';
 export default function Cadastro({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [nome, setNome] = useState('');
 
   const cadastrarUsuario = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
+     
       await setDoc(doc(db, 'usuarios', user.uid), {
+        nome: nome,
         email: email,
         reserva: null
       });
-
       Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!');
       navigation.navigate('Login');
     } catch (error) {
@@ -28,6 +30,14 @@ export default function Cadastro({ navigation }) {
   return (
     <View style={estilos.container}>
       <Text style={estilos.titulo}>Crie sua conta</Text>
+
+      <Text style={estilos.label}>NOME</Text>
+      <TextInput
+        placeholder="Digite seu nome"
+        value={nome}
+        onChangeText={setNome}
+        style={estilos.campo}
+      />
 
       <Text style={estilos.label}>EMAIL</Text>
       <TextInput

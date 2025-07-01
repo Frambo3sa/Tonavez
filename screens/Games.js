@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
-import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -9,31 +9,19 @@ import {
   Alert,
   Image,
   Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { auth, db } from '../firebaseConfig';
 
 const jogos = [
-  {
-    id: '1',
-    nome: 'Futebol de Mesa',
-    imagem: require('../imagens/futebol.png'),
-  },
-  {
-    id: '2',
-    nome: 'Tênis de Mesa',
-    imagem: require('../imagens/tenis.png'),
-  },
-  {
-    id: '3',
-    nome: 'Xadrez',
-    imagem: require('../imagens/xadrez.png'),
-  },
-  
+  { id: '1', nome: 'Futebol de Mesa', imagem: require('../imagens/futebol.png') },
+  { id: '2', nome: 'Tênis de Mesa', imagem: require('../imagens/tenis.png') },
+  { id: '3', nome: 'Xadrez', imagem: require('../imagens/xadrez.png') },
 ];
 
 export default function Games() {
@@ -49,11 +37,24 @@ export default function Games() {
     }
 
     try {
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      const agora = new Date();
+
+      if (userDoc.exists()) {
+        const reservaExistente = userDoc.data().reserva;
+        const [dia, mes, ano] = reservaExistente.data.split('/');
+        const dataHoraReserva = new Date(`${ano}-${mes}-${dia}T${reservaExistente.horario}`);
+        if (dataHoraReserva > agora) {
+          Alert.alert('Você já tem uma reserva ativa!', 'Devolva o jogo antes de reservar outro.');
+          return;
+        }
+      }
+
       const reserva = {
         userId: auth.currentUser.uid,
         jogo: jogoSelecionado.nome,
         data: data.toLocaleDateString(),
-        horario: data.toLocaleTimeString()
+        horario: data.toLocaleTimeString(),
       };
 
       await setDoc(doc(db, 'users', auth.currentUser.uid), { reserva }, { merge: true });
@@ -73,7 +74,7 @@ export default function Games() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.textoSelecao}>Escolha um jogo para reservar:</Text>
 
@@ -82,18 +83,12 @@ export default function Games() {
             key={item.id}
             style={[
               styles.cardJogo,
-              jogoSelecionado?.id === item.id && styles.cardSelecionado
+              jogoSelecionado?.id === item.id && styles.cardSelecionado,
             ]}
             onPress={() => setJogoSelecionado(item)}
           >
             <View style={styles.areaImagem}>
-              {item.imagem ? (
-                <Image source={item.imagem} style={styles.imagemJogo} />
-              ) : (
-                <View style={styles.imagemPlaceholder}>
-                  <Text style={styles.placeholderTexto}>Imagem aqui</Text>
-                </View>
-              )}
+              <Image source={item.imagem} style={styles.imagemJogo} />
             </View>
             <Text style={styles.nomeJogo}>{item.nome}</Text>
           </TouchableOpacity>
@@ -107,8 +102,8 @@ export default function Games() {
               <Text style={styles.textoBotaoData}>Escolher Data e Hora</Text>
             </TouchableOpacity>
 
-            {mostrarPicker && (
-              Platform.OS === 'web' ? (
+            {mostrarPicker &&
+              (Platform.OS === 'web' ? (
                 <ReactDatePicker
                   selected={data}
                   onChange={(date) => setData(date)}
@@ -123,16 +118,13 @@ export default function Games() {
                   display="default"
                   onChange={onChange}
                 />
-              )
-            )}
+              ))}
 
             <TouchableOpacity style={styles.botaoReservar} onPress={reservarJogo}>
               <Text style={styles.textoBotaoReservar}>Reservar Jogo</Text>
             </TouchableOpacity>
           </View>
         )}
-
-        <View style={{ height: 100 }} /> 
       </ScrollView>
 
       <View style={styles.rodape}>
@@ -153,19 +145,14 @@ export default function Games() {
           <Text style={styles.textoRodape}>Perfil</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#083B70' },
-  scrollContent: { padding: 20, paddingBottom: 120 },
-  textoSelecao: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
+  scrollContent: { padding: 20, paddingBottom: 140, flexGrow: 1 },
+  textoSelecao: { color: '#fff', fontSize: 18, textAlign: 'center', marginBottom: 20 },
   cardJogo: {
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -173,16 +160,8 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     alignItems: 'center',
   },
-  cardSelecionado: {
-    borderColor: 'green',
-    borderWidth: 2,
-  },
-  nomeJogo: {
-    fontSize: 18,
-    color: '#083B70',
-    fontWeight: '600',
-    marginTop: 10,
-  },
+  cardSelecionado: { borderColor: 'green', borderWidth: 2 },
+  nomeJogo: { fontSize: 18, color: '#083B70', fontWeight: '600', marginTop: 10 },
   areaImagem: {
     width: '100%',
     height: 120,
@@ -192,32 +171,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  imagemJogo: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  imagemPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#ccc',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderTexto: {
-    color: '#666',
-    fontSize: 14,
-  },
-  secaoReserva: {
-    marginTop: 20,
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  detalhe: {
-    color: '#fff',
-    fontSize: 16,
-    marginBottom: 10,
-  },
+  imagemJogo: { width: '100%', height: '100%', resizeMode: 'cover' },
+  secaoReserva: { marginTop: 20, alignItems: 'center', paddingHorizontal: 20 },
+  detalhe: { color: '#fff', fontSize: 16, marginBottom: 10 },
   botaoData: {
     backgroundColor: '#F7C53C',
     borderRadius: 10,
@@ -225,10 +181,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 10,
   },
-  textoBotaoData: {
-    fontWeight: 'bold',
-    color: '#083B70',
-  },
+  textoBotaoData: { fontWeight: 'bold', color: '#083B70' },
   botaoReservar: {
     backgroundColor: '#fff',
     paddingVertical: 12,
@@ -236,10 +189,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 10,
   },
-  textoBotaoReservar: {
-    color: '#083B70',
-    fontWeight: 'bold',
-  },
+  textoBotaoReservar: { color: '#083B70', fontWeight: 'bold' },
   rodape: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -252,12 +202,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
-  itemRodape: {
-    alignItems: 'center',
-  },
-  textoRodape: {
-    color: '#fff',
-    fontSize: 12,
-    marginTop: 4,
-  },
+  itemRodape: { alignItems: 'center' },
+  textoRodape: { color: '#fff', fontSize: 12, marginTop: 4 },
 });

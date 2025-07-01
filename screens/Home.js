@@ -1,79 +1,104 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { doc, getDoc } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../firebaseConfig';
+import { doc, getDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
-export default function Inicio() {
+export default function Home() {
   const [reserva, setReserva] = useState(null);
-  const navegacao = useNavigation();
+  const [nomeUsuario, setNomeUsuario] = useState('');
+  const navigation = useNavigation();
+
+  const fetchUser = async () => {
+    if (!auth.currentUser) return;
+    try {
+      const userDoc = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setReserva(data.reserva);
+        setNomeUsuario(data.nome || 'Usuário');
+      } else {
+        setReserva(null);
+        setNomeUsuario('Usuário');
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível carregar os dados.');
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
-    const buscarReserva = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-        if (userDoc.exists()) {
-          const dados = userDoc.data();
-          setReserva(dados.reserva);
-        } else {
-          setReserva(null);
-        }
-      } catch (erro) {
-        console.error('Erro ao buscar reserva:', erro);
-      }
-    };
-
-    buscarReserva();
+    fetchUser();
   }, []);
 
+  const devolverJogo = async () => {
+    try {
+      await deleteDoc(doc(db, 'users', auth.currentUser.uid));
+      
+      const reservasRef = collection(db, 'reservas');
+      const q = query(reservasRef, where('userId', '==', auth.currentUser.uid));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(async docSnap => await deleteDoc(doc(db, 'reservas', docSnap.id)));
+
+      setReserva(null);
+      Alert.alert('Sucesso', 'Reserva cancelada!');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível cancelar a reserva.');
+      console.error(error);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.saudacao}>
-        <Text style={styles.titulo}>Olá {auth.currentUser.displayName || 'Usuário'}!</Text>
+        <Text style={styles.titulo}>Olá {nomeUsuario}!</Text>
         <Text style={styles.subtitulo}>você já está na vez?</Text>
       </View>
 
       <View style={styles.cartaoReserva}>
         <Text style={styles.textoReserva}>
-          {reserva ? `Jogo reservado: ${reserva.jogo}` : 'Ainda sem jogos reservado!'}
+          {reserva ? `Jogo reservado: ${reserva.jogo} \nData: ${reserva.data} \nHorário: ${reserva.horario}` : 'Ainda sem jogos reservado!'}
         </Text>
+        {reserva && (
+          <TouchableOpacity style={styles.botaoDevolver} onPress={devolverJogo}>
+            <Text style={styles.textoBotaoDevolver}>Devolvi o jogo</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.botoesContainer}>
-        <TouchableOpacity style={styles.botao} onPress={() => navegacao.navigate('Games')}>
+        <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Games')}>
           <Ionicons name="dice" size={32} color="#fff" />
           <Text style={styles.textoBotao}>Jogos</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.botao} onPress={() => navegacao.navigate('Agenda')}>
+        <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Agenda')}>
           <Ionicons name="calendar" size={32} color="#fff" />
           <Text style={styles.textoBotao}>Agenda</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.botao} onPress={() => navegacao.navigate('Videos')}>
+        <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Videos')}>
           <Ionicons name="bulb" size={32} color="#fff" />
           <Text style={styles.textoBotao}>Se liga só!</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.rodape}>
-        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Games')}>
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navigation.navigate('Games')}>
           <Ionicons name="dice" size={24} color="#fff" />
           <Text style={styles.textoRodape}>Jogos</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Agenda')}>
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navigation.navigate('Agenda')}>
           <Ionicons name="calendar" size={24} color="#fff" />
           <Text style={styles.textoRodape}>Agenda</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Profile')}>
+        <TouchableOpacity style={styles.itemRodape} onPress={() => navigation.navigate('Profile')}>
           <Ionicons name="person" size={24} color="#fff" />
           <Text style={styles.textoRodape}>Perfil</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -158,4 +183,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
+  botaoDevolver: {
+    backgroundColor: '#083B70',
+    marginTop: 10,
+    borderRadius: 8,
+    padding: 10,
+  },
+  textoBotaoDevolver: {
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center'
+  }
 });
