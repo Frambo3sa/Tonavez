@@ -15,7 +15,7 @@ export default function Cadastro({ navigation }) {
       const user = userCredential.user;
 
      
-      await setDoc(doc(db, 'usuarios', user.uid), {
+      await setDoc(doc(db, 'users', user.uid), {
         nome: nome,
         email: email,
         reserva: null

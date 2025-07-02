@@ -21,6 +21,11 @@ export default function Videos() {
     setVideoSelecionado(null);
   };
 
+
+
+
+  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Se Liga Só - Tutoriais</Text>

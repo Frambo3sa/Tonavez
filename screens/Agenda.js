@@ -18,30 +18,31 @@ export default function Agenda() {
   }, []);
 
   const carregarReservas = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'reservas'));
-      const marks = {};
-      const reservas = {};
+  try {
+    const querySnapshot = await getDocs(collection(db, 'reservas'));
+    const marks = {};
+    const reservas = {};
 
-      querySnapshot.forEach((docSnap) => {
-        const { data: dataReserva, jogo, horario } = docSnap.data();
-        const dateFormatted = formatarData(dataReserva);
+    querySnapshot.forEach((docSnap) => {
+      const { data: dataReserva, jogo, horario } = docSnap.data();
+      const dateFormatted = dataReserva; 
 
-        marks[dateFormatted] = { marked: true, dotColor: 'blue' };
+      marks[dateFormatted] = { marked: true, dotColor: 'blue' };
 
-        if (!reservas[dateFormatted]) {
-          reservas[dateFormatted] = [];
-        }
+      if (!reservas[dateFormatted]) {
+        reservas[dateFormatted] = [];
+      }
 
-        reservas[dateFormatted].push({ jogo, horario });
-      });
+      reservas[dateFormatted].push({ jogo, horario });
+    });
 
-      setMarkedDates(marks);
-      setTodasReservas(reservas);
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar as reservas.');
-    }
-  };
+    setMarkedDates(marks);
+    setTodasReservas(reservas);
+  } catch (error) {
+    Alert.alert('Erro', 'Não foi possível carregar as reservas.');
+    console.error(error);
+  }
+};
 
   const formatarData = (dataString) => {
     const [dia, mes, ano] = dataString.split('/');

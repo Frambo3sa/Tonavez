@@ -31,41 +31,41 @@ export default function Games() {
   const navegacao = useNavigation();
 
   const reservarJogo = async () => {
-    if (!jogoSelecionado) {
-      Alert.alert('Selecione um jogo primeiro!');
-      return;
-    }
+  if (!jogoSelecionado) {
+    Alert.alert('Selecione um jogo primeiro!');
+    return;
+  }
 
-    try {
-      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-      const agora = new Date();
+  try {
+    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+    const agora = new Date();
 
-      if (userDoc.exists()) {
-        const reservaExistente = userDoc.data().reserva;
-        const [dia, mes, ano] = reservaExistente.data.split('/');
-        const dataHoraReserva = new Date(`${ano}-${mes}-${dia}T${reservaExistente.horario}`);
-        if (dataHoraReserva > agora) {
-          Alert.alert('Você já tem uma reserva ativa!', 'Devolva o jogo antes de reservar outro.');
-          return;
-        }
+    if (userDoc.exists() && userDoc.data().reserva) {
+      const reservaExistente = userDoc.data().reserva;
+      const dataHoraReserva = new Date(`${reservaExistente.data}T${reservaExistente.horario}`);
+      if (dataHoraReserva > agora) {
+        Alert.alert('Você já tem uma reserva ativa!', 'Devolva o jogo antes de reservar outro.');
+        return;
       }
-
-      const reserva = {
-        userId: auth.currentUser.uid,
-        jogo: jogoSelecionado.nome,
-        data: data.toLocaleDateString(),
-        horario: data.toLocaleTimeString(),
-      };
-
-      await setDoc(doc(db, 'users', auth.currentUser.uid), { reserva }, { merge: true });
-      await addDoc(collection(db, 'reservas'), reserva);
-
-      Alert.alert('Sucesso', 'Jogo reservado com sucesso!');
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível reservar o jogo.');
-      console.error(error);
     }
-  };
+
+    const reserva = {
+      userId: auth.currentUser.uid,
+      jogo: jogoSelecionado.nome,
+      data: data.toISOString().split('T')[0], 
+      horario: data.toTimeString().split(' ')[0], 
+    };
+
+    await setDoc(doc(db, 'users', auth.currentUser.uid), { reserva }, { merge: true });
+    await addDoc(collection(db, 'reservas'), reserva);
+
+    Alert.alert('Sucesso', 'Jogo reservado com sucesso!');
+    navegacao.navigate('Home');
+  } catch (error) {
+    Alert.alert('Erro', 'Não foi possível reservar o jogo.');
+    console.error(error);
+  }
+};
 
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate || data;

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { auth, db } from '../firebaseConfig';
-import { doc, getDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 
 export default function Home() {
   const [reserva, setReserva] = useState(null);
@@ -13,10 +13,10 @@ export default function Home() {
   const fetchUser = async () => {
     if (!auth.currentUser) return;
     try {
-      const userDoc = await getDoc(doc(db, 'usuarios', auth.currentUser.uid));
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
       if (userDoc.exists()) {
         const data = userDoc.data();
-        setReserva(data.reserva);
+        if (data.reserva) setReserva(data.reserva); 
         setNomeUsuario(data.nome || 'Usuário');
       } else {
         setReserva(null);
@@ -28,14 +28,18 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUser();
+    }, [])
+  );
 
   const devolverJogo = async () => {
     try {
-      await deleteDoc(doc(db, 'users', auth.currentUser.uid));
-      
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        reserva: deleteField()
+      });
+
       const reservasRef = collection(db, 'reservas');
       const q = query(reservasRef, where('userId', '==', auth.currentUser.uid));
       const snapshot = await getDocs(q);
@@ -58,7 +62,9 @@ export default function Home() {
 
       <View style={styles.cartaoReserva}>
         <Text style={styles.textoReserva}>
-          {reserva ? `Jogo reservado: ${reserva.jogo} \nData: ${reserva.data} \nHorário: ${reserva.horario}` : 'Ainda sem jogos reservado!'}
+          {reserva
+            ? `Jogo reservado: ${reserva.jogo} \nData: ${reserva.data} \nHorário: ${reserva.horario}`
+            : 'Ainda sem jogos reservado!'}
         </Text>
         {reserva && (
           <TouchableOpacity style={styles.botaoDevolver} onPress={devolverJogo}>
@@ -72,12 +78,10 @@ export default function Home() {
           <Ionicons name="dice" size={32} color="#fff" />
           <Text style={styles.textoBotao}>Jogos</Text>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Agenda')}>
           <Ionicons name="calendar" size={32} color="#fff" />
           <Text style={styles.textoBotao}>Agenda</Text>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Videos')}>
           <Ionicons name="bulb" size={32} color="#fff" />
           <Text style={styles.textoBotao}>Se liga só!</Text>
@@ -101,6 +105,7 @@ export default function Home() {
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
