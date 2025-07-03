@@ -5,17 +5,7 @@ import { addDoc, collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {
-  Alert,
-  Image,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {Alert,Image,Platform,SafeAreaView,ScrollView,StyleSheet,Text,TouchableOpacity,View,} from 'react-native';
 import { auth, db } from '../firebaseConfig';
 
 const jogos = [
@@ -31,41 +21,41 @@ export default function Games() {
   const navegacao = useNavigation();
 
   const reservarJogo = async () => {
-  if (!jogoSelecionado) {
-    Alert.alert('Selecione um jogo primeiro!');
-    return;
-  }
-
-  try {
-    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-    const agora = new Date();
-
-    if (userDoc.exists() && userDoc.data().reserva) {
-      const reservaExistente = userDoc.data().reserva;
-      const dataHoraReserva = new Date(`${reservaExistente.data}T${reservaExistente.horario}`);
-      if (dataHoraReserva > agora) {
-        Alert.alert('Você já tem uma reserva ativa!', 'Devolva o jogo antes de reservar outro.');
-        return;
-      }
+    if (!jogoSelecionado) {
+      Alert.alert('Selecione um jogo primeiro!');
+      return;
     }
 
-    const reserva = {
-      userId: auth.currentUser.uid,
-      jogo: jogoSelecionado.nome,
-      data: data.toISOString().split('T')[0], 
-      horario: data.toTimeString().split(' ')[0], 
-    };
+    try {
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      const agora = new Date();
 
-    await setDoc(doc(db, 'users', auth.currentUser.uid), { reserva }, { merge: true });
-    await addDoc(collection(db, 'reservas'), reserva);
+      if (userDoc.exists() && userDoc.data().reserva) {
+        const reservaExistente = userDoc.data().reserva;
+        const dataHoraReserva = new Date(`${reservaExistente.data}T${reservaExistente.horario}`);
+        if (dataHoraReserva > agora) {
+          Alert.alert('Você já tem uma reserva ativa!', 'Devolva o jogo antes de reservar outro.');
+          return;
+        }
+      }
 
-    Alert.alert('Sucesso', 'Jogo reservado com sucesso!');
-    navegacao.navigate('Home');
-  } catch (error) {
-    Alert.alert('Erro', 'Não foi possível reservar o jogo.');
-    console.error(error);
-  }
-};
+      const reserva = {
+        userId: auth.currentUser.uid,
+        jogo: jogoSelecionado.nome,
+        data: data.toISOString().split('T')[0],
+        horario: data.toTimeString().split(' ')[0],
+      };
+
+      await setDoc(doc(db, 'users', auth.currentUser.uid), { reserva }, { merge: true });
+      await addDoc(collection(db, 'reservas'), reserva);
+
+      Alert.alert('Sucesso', 'Jogo reservado com sucesso!');
+      navegacao.navigate('Home');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível reservar o jogo.');
+      console.error(error);
+    }
+  };
 
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate || data;
@@ -75,7 +65,10 @@ export default function Games() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.textoSelecao}>Escolha um jogo para reservar:</Text>
 
         {jogos.map((item) => (
@@ -151,7 +144,7 @@ export default function Games() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#083B70' },
-  scrollContent: { padding: 20, paddingBottom: 140, flexGrow: 1 },
+  scrollContent: { padding: 20, paddingBottom: 200, flexGrow: 1 },
   textoSelecao: { color: '#fff', fontSize: 18, textAlign: 'center', marginBottom: 20 },
   cardJogo: {
     backgroundColor: '#fff',

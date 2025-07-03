@@ -26,7 +26,7 @@ export default function Login({ navigation }) {
         resizeMode="contain"
       />
 
-      <Text style={styles.titulo}>Login</Text>
+      
 
       <Text style={styles.label}>EMAIL</Text>
       <TextInput
@@ -48,7 +48,7 @@ export default function Login({ navigation }) {
       />
 
       <TouchableOpacity style={styles.botao} onPress={fazerLogin}>
-        <Text style={styles.textoBotao}>Log in</Text>
+        <Text style={styles.textoBotao}>Logar</Text>
       </TouchableOpacity>
 
       <Text style={styles.link} onPress={() => navigation.navigate('Register')}>

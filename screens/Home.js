@@ -68,7 +68,7 @@ export default function Home() {
         </Text>
         {reserva && (
           <TouchableOpacity style={styles.botaoDevolver} onPress={devolverJogo}>
-            <Text style={styles.textoBotaoDevolver}>Devolvi o jogo</Text>
+            <Text style={styles.textoBotaoDevolver}>Devolver o jogo</Text>
           </TouchableOpacity>
         )}
       </View>
