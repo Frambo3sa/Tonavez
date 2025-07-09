@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { collection, deleteDoc, deleteField, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../firebaseConfig';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 
 export default function Home() {
   const [reserva, setReserva] = useState(null);
@@ -53,6 +53,23 @@ export default function Home() {
     }
   };
 
+const isHojeReserva = () => {
+  if (!reserva || !reserva.data) return false;
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const [ano, mes, dia] = reserva.data.split('-').map(Number);
+  const dataReserva = new Date(ano, mes - 1, dia); 
+  dataReserva.setHours(0, 0, 0, 0);
+
+  return hoje.getTime() === dataReserva.getTime();
+};
+
+
+
+
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.saudacao}>
@@ -66,9 +83,23 @@ export default function Home() {
             ? `Jogo reservado: ${reserva.jogo} \nData: ${reserva.data} \nHorário: ${reserva.horario}`
             : 'Ainda sem jogos reservado!'}
         </Text>
+
+        {reserva && (
+          <TouchableOpacity
+            style={[
+              styles.botaoDevolver,
+              { backgroundColor: isHojeReserva() ? '#083B70' : '#A9A9A9' }
+            ]}
+            onPress={isHojeReserva() ? devolverJogo : null}
+            disabled={!isHojeReserva()}
+          >
+            <Text style={styles.textoBotaoDevolver}>Devolver o jogo</Text>
+          </TouchableOpacity>
+        )}
+
         {reserva && (
           <TouchableOpacity style={styles.botaoDevolver} onPress={devolverJogo}>
-            <Text style={styles.textoBotaoDevolver}>Devolver o jogo</Text>
+            <Text style={styles.textoBotaoDevolver}>Cancelar jogo</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -114,7 +145,6 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 70,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   saudacao: {
     alignSelf: 'flex-start',

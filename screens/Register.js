@@ -47,7 +47,7 @@ export default function Cadastro({ navigation }) {
         style={estilos.campo}
       />
 
-      <Text style={estilos.label}>SENHA</Text>
+      <Text style={estilos.label}>SENHA mínimo 6 caracteres</Text>
       <TextInput
         placeholder="Digite sua senha"
         value={senha}

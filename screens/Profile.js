@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { updatePassword } from 'firebase/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, Alert, TouchableOpacity,
-  Modal, TextInput
+  Alert,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { auth, db } from '../firebaseConfig';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { updatePassword } from 'firebase/auth';
-import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 
 export default function Profile() {
   const [dadosUsuario, setDadosUsuario] = useState(null);
@@ -37,6 +42,9 @@ export default function Profile() {
     auth.signOut()
       .then(() => {
         navegacao.replace('Login');
+        setTimeout(() => {
+          Alert.alert('Sucesso', 'Você saiu da conta com sucesso!');
+        }, 300);
       })
       .catch(() => {
         Alert.alert('Erro', 'Não foi possível sair da conta.');
@@ -55,7 +63,9 @@ export default function Profile() {
       setDadosUsuario((prev) => ({ ...prev, nome: novoNome }));
       setMostrarModalNome(false);
       setNovoNome('');
-      Alert.alert('Sucesso', 'Nome atualizado com sucesso!');
+      setTimeout(() => {
+        Alert.alert('Sucesso', 'Nome atualizado com sucesso!');
+      }, 300);
     } catch (error) {
       Alert.alert('Erro', 'Erro ao atualizar o nome.');
     }
@@ -71,7 +81,9 @@ export default function Profile() {
       await updatePassword(auth.currentUser, novaSenha);
       setMostrarModalSenha(false);
       setNovaSenha('');
-      Alert.alert('Sucesso', 'Senha atualizada com sucesso!');
+      setTimeout(() => {
+        Alert.alert('Sucesso', 'Senha atualizada com sucesso!');
+      }, 300);
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Erro ao alterar a senha. Faça login novamente se necessário.');
@@ -115,7 +127,6 @@ export default function Profile() {
         <Text style={styles.textoBotaoSair}>Sair da Conta</Text>
       </TouchableOpacity>
 
-      
       <Modal visible={mostrarModalNome} animationType="slide" transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -139,7 +150,6 @@ export default function Profile() {
         </View>
       </Modal>
 
-    
       <Modal visible={mostrarModalSenha} animationType="slide" transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -163,6 +173,7 @@ export default function Profile() {
           </View>
         </View>
       </Modal>
+
 
       <View style={styles.rodape}>
         <TouchableOpacity style={styles.itemRodape} onPress={() => navegacao.navigate('Home')}>
@@ -261,7 +272,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     position: 'absolute',
     bottom: 0,
-    width: '100%',
+    left: 0,
+    right: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
