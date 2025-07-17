@@ -5,7 +5,17 @@ import { addDoc, collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {Alert,Image,Platform,SafeAreaView,ScrollView,StyleSheet,Text,TouchableOpacity,View,} from 'react-native';
+import {
+  Alert,
+  Image,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { auth, db } from '../firebaseConfig';
 
 const jogos = [
@@ -18,6 +28,7 @@ export default function Games() {
   const [jogoSelecionado, setJogoSelecionado] = useState(null);
   const [mostrarPicker, setMostrarPicker] = useState(false);
   const [data, setData] = useState(new Date());
+  const [dataSelecionada, setDataSelecionada] = useState(false); // NOVO ESTADO
   const navegacao = useNavigation();
 
   const reservarJogo = async () => {
@@ -61,6 +72,7 @@ export default function Games() {
     const currentDate = selectedDate || data;
     setMostrarPicker(Platform.OS === 'ios');
     setData(currentDate);
+    setDataSelecionada(true); // Marca como selecionada
   };
 
   return (
@@ -99,7 +111,10 @@ export default function Games() {
               (Platform.OS === 'web' ? (
                 <ReactDatePicker
                   selected={data}
-                  onChange={(date) => setData(date)}
+                  onChange={(date) => {
+                    setData(date);
+                    setDataSelecionada(true); // Marca como selecionada
+                  }}
                   showTimeSelect
                   dateFormat="Pp"
                 />
@@ -113,9 +128,11 @@ export default function Games() {
                 />
               ))}
 
-            <TouchableOpacity style={styles.botaoReservar} onPress={reservarJogo}>
-              <Text style={styles.textoBotaoReservar}>Reservar Jogo</Text>
-            </TouchableOpacity>
+            {dataSelecionada && (
+              <TouchableOpacity style={styles.botaoReservar} onPress={reservarJogo}>
+                <Text style={styles.textoBotaoReservar}>Reservar Jogo</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ScrollView>
